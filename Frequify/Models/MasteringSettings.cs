@@ -15,6 +15,7 @@ public sealed class MasteringSettings : ObservableObject
         HighPass = new HighPassSettings();
         Equalizer = new EqualizerSettings();
         Compression = new MultibandCompressionSettings();
+        Rebalance = new RebalanceSettings();
         Saturation = new SaturationSettings();
         Stereo = new StereoImagerSettings();
         Limiter = new LimiterSettings();
@@ -35,6 +36,11 @@ public sealed class MasteringSettings : ObservableObject
     /// Gets multiband compression settings.
     /// </summary>
     public MultibandCompressionSettings Compression { get; }
+
+    /// <summary>
+    /// Gets pseudo rebalance settings.
+    /// </summary>
+    public RebalanceSettings Rebalance { get; }
 
     /// <summary>
     /// Gets saturation settings.
@@ -149,6 +155,22 @@ public sealed class SaturationSettings : ObservableObject
     public bool IsEnabled { get => _isEnabled; set => SetProperty(ref _isEnabled, value); }
 
     public double Drive { get => _drive; set => SetProperty(ref _drive, value); }
+}
+
+public sealed class RebalanceSettings : ObservableObject
+{
+    private bool _isEnabled = true;
+    private double _vocalGainDb;
+    private double _drumGainDb;
+    private double _instrumentGainDb;
+
+    public bool IsEnabled { get => _isEnabled; set => SetProperty(ref _isEnabled, value); }
+
+    public double VocalGainDb { get => _vocalGainDb; set => SetProperty(ref _vocalGainDb, value); }
+
+    public double DrumGainDb { get => _drumGainDb; set => SetProperty(ref _drumGainDb, value); }
+
+    public double InstrumentGainDb { get => _instrumentGainDb; set => SetProperty(ref _instrumentGainDb, value); }
 }
 
 public sealed class StereoImagerSettings : ObservableObject

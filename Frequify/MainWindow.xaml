@@ -5,10 +5,10 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Frequify - Audio Mastering"
-        Height="940"
-        Width="1650"
-        MinHeight="800"
-        MinWidth="1300"
+        Height="800"
+        Width="1600"
+        MinHeight="600"
+        MinWidth="1200"
         Background="{StaticResource AppBackgroundBrush}"
         AllowDrop="True"
         Drop="Window_Drop"
@@ -158,7 +158,7 @@
                 <StackPanel>
                     <GroupBox Header="A/B Comparison" Margin="0,0,0,10">
                         <StackPanel>
-                            <TextBlock Text="Switch preview source and control transport. Visuals compare original vs mastered." TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <TextBlock Text="Compare original vs. mastered songs" TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
 
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
                                 <Button Content="Original View" Command="{Binding SetPreviewOriginalViewCommand}" Style="{StaticResource PreviewOriginalViewButtonStyle}" MinWidth="110" Margin="0,0,8,0" />
@@ -188,9 +188,11 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Volume" VerticalAlignment="Center" Margin="0,0,8,0" />
                                 <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding PreviewVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Column="2" Text="{Binding PreviewVolume, StringFormat={}{0:P0}}" VerticalAlignment="Center" Margin="8,0,0,0" />
                             </Grid>
 
                             <Grid Margin="0,0,0,8">
@@ -215,6 +217,13 @@
                                         <Viewbox Stretch="Fill" Height="48">
                                             <Canvas Width="336" Height="82" ClipToBounds="True">
                                                 <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4" Points="{Binding OriginalWaveformPoints}" />
+                                                <Line X1="{Binding PreviewPlayheadX}"
+                                                      Y1="0"
+                                                      X2="{Binding PreviewPlayheadX}"
+                                                      Y2="82"
+                                                      Stroke="{StaticResource DangerBrush}"
+                                                      StrokeThickness="1.6"
+                                                      SnapsToDevicePixels="True" />
                                             </Canvas>
                                         </Viewbox>
                                     </Border>
@@ -235,6 +244,13 @@
                                         <Viewbox Stretch="Fill" Height="48">
                                             <Canvas Width="336" Height="82" ClipToBounds="True">
                                                 <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4" Points="{Binding MasteredWaveformPoints}" />
+                                                <Line X1="{Binding PreviewPlayheadX}"
+                                                      Y1="0"
+                                                      X2="{Binding PreviewPlayheadX}"
+                                                      Y2="82"
+                                                      Stroke="{StaticResource DangerBrush}"
+                                                      StrokeThickness="1.6"
+                                                      SnapsToDevicePixels="True" />
                                             </Canvas>
                                         </Viewbox>
                                     </Border>
@@ -316,8 +332,67 @@
                         <StackPanel>
                             <TextBlock Text="Selecting a preset instantly updates sliders and controls. You keep full manual control." TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
                             <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" Margin="0,8,0,0" />
+                            <Grid Margin="0,8,0,0"
+                                  Visibility="{Binding IsAutoPresetSelected, Converter={StaticResource BoolToVisibility}}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Auto Mastering Strength" FontWeight="SemiBold" />
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding AutoMasteringStrengthText}" HorizontalAlignment="Right" />
+                                <Slider Grid.Row="1"
+                                        Grid.ColumnSpan="2"
+                                        Minimum="0.5"
+                                        Maximum="2.0"
+                                        Value="{Binding AutoMasteringStrength, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
                             <Button Content="Reapply Preset" Command="{Binding ApplyPresetCommand}" Margin="0,8,0,0" />
                             <TextBlock Text="{Binding SelectedPresetDescription}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="12" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Master Rebalance (Pseudo)" Margin="0,0,0,10">
+                        <StackPanel>
+                            <CheckBox Content="Enable Pseudo Rebalance" IsChecked="{Binding Settings.Rebalance.IsEnabled}" />
+                            <TextBlock Text="Approximates vocal, drum, and instrument emphasis with tonal weighting. This is not true stem separation."
+                                       TextWrapping="Wrap"
+                                       Margin="0,6,0,8"
+                                       FontSize="11"
+                                       Foreground="{StaticResource TextSecondaryBrush}" />
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Vocals" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding Settings.Rebalance.VocalGainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <Slider Minimum="-6" Maximum="6" Value="{Binding Settings.Rebalance.VocalGainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Drums" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding Settings.Rebalance.DrumGainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <Slider Minimum="-6" Maximum="6" Value="{Binding Settings.Rebalance.DrumGainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Instruments" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding Settings.Rebalance.InstrumentGainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <Slider Minimum="-6" Maximum="6" Value="{Binding Settings.Rebalance.InstrumentGainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </GroupBox>
 
@@ -345,7 +420,7 @@
             </ScrollViewer>
 
             <Grid Grid.Column="2">
-                <Border BorderBrush="{StaticResource BorderBrushMuted}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{StaticResource PanelBrush}">
+                <Border BorderBrush="{StaticResource BorderBrushMuted}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{StaticResource PanelBrush}" ClipToBounds="False">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Visible" />
@@ -360,7 +435,7 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{StaticResource PanelDeepBrush}">
                         <StackPanel>
                             <TextBlock Text="Simple Mode" FontSize="20" FontWeight="Bold" Margin="0,0,0,4" />
-                            <TextBlock Text="Focused controls for fast results. Switch to Advanced for full stage parameters." Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" TextWrapping="Wrap" />
+                            <TextBlock Text="Simple controls for fast tweaks. Switch to Advanced for full stage parameters." Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" TextWrapping="Wrap" />
 
                             <GroupBox Header="Tone">
                                 <Grid>
@@ -372,14 +447,48 @@
                                     </Grid.RowDefinitions>
                                     <TextBlock Grid.Row="0" Text="High-Pass Cutoff" />
                                     <Slider Grid.Row="1" Minimum="20" Maximum="120" Value="{Binding Settings.HighPass.CutoffHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Grid.Row="1" Text="{Binding Settings.HighPass.CutoffHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
+                                    <TextBlock Grid.Row="0" Text="{Binding Settings.HighPass.CutoffHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
 
-                                    <TextBlock Grid.Row="2" Text="Low / Mid / High EQ Gain" Margin="0,8,0,0" />
-                                    <StackPanel Grid.Row="3" Orientation="Horizontal">
-                                        <Slider Width="220" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.LowShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
-                                        <Slider Width="220" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.MidBell.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
-                                        <Slider Width="220" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.HighShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    </StackPanel>
+                                    <TextBlock Grid.Row="2" Text="EQ Gain" Margin="0,8,0,0" />
+                                    <Grid Grid.Row="3" Margin="0,2,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <Grid Grid.Row="0" Grid.Column="0" Margin="0,0,8,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Low" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.LowShelf.GainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Grid Grid.Row="0" Grid.Column="1" Margin="0,0,8,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="Mid" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.MidBell.GainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                        </Grid>
+                                        <Grid Grid.Row="0" Grid.Column="2" Margin="0,0,0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="High" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.HighShelf.GainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                        </Grid>
+
+                                        <Slider Grid.Row="1" Grid.Column="0" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.LowShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                        <Slider Grid.Row="1" Grid.Column="1" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.MidBell.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                        <Slider Grid.Row="1" Grid.Column="2" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.HighShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </Grid>
                                 </Grid>
                             </GroupBox>
 
@@ -398,22 +507,33 @@
 
                                     <TextBlock Grid.Row="0" Grid.Column="0" Text="Saturation Drive" />
                                     <TextBlock Grid.Row="0" Grid.Column="1" Text="Stereo Width" Margin="8,0,0,0" />
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Settings.Saturation.Drive, StringFormat={}{0:P0}}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,0,0" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Settings.Stereo.Width, StringFormat={}{0:P0}}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="8,2,0,0" />
                                     <Slider Grid.Row="1" Grid.Column="0" Minimum="0" Maximum="1" Value="{Binding Settings.Saturation.Drive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <Slider Grid.Row="1" Grid.Column="1" Minimum="0.7" Maximum="1.3" Value="{Binding Settings.Stereo.Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
 
                                     <TextBlock Grid.Row="2" Grid.Column="0" Text="Limiter Ceiling" Margin="0,8,0,0" />
                                     <TextBlock Grid.Row="2" Grid.Column="1" Text="Target LUFS" Margin="8,8,0,0" />
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Settings.Limiter.CeilingDbTp, StringFormat={}{0:F2} dBTP}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,0,0" />
                                     <Slider Grid.Row="3" Grid.Column="0" Minimum="-2" Maximum="-0.1" Value="{Binding Settings.Limiter.CeilingDbTp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                     <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding TargetLufsOptions}" SelectedItem="{Binding Settings.Loudness.TargetLufs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
+                                    
                                 </Grid>
                             </GroupBox>
 
                             <GroupBox Header="EQ Response" Margin="0,10,0,0">
-                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="560">
-                                    <Canvas Width="336" Height="100" Background="{StaticResource PanelDeepBrush}">
-                                        <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8" Points="{Binding EqResponsePoints}" />
-                                    </Canvas>
-                                </Viewbox>
+                                <Border CornerRadius="7"
+                                        BorderThickness="1"
+                                        BorderBrush="{StaticResource BorderBrushStrong}"
+                                        Background="{StaticResource PanelDeepBrush}"
+                                        Padding="4">
+                                    <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Center" MaxWidth="780">
+                                        <Canvas Width="336" Height="100" Background="{StaticResource PanelDeepBrush}">
+                                            <Rectangle Width="336" Height="100" Stroke="{StaticResource BorderBrushMuted}" StrokeThickness="1" />
+                                            <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8" Points="{Binding EqResponsePoints}" />
+                                        </Canvas>
+                                    </Viewbox>
+                                </Border>
                             </GroupBox>
                         </StackPanel>
                     </ScrollViewer>
@@ -436,9 +556,15 @@
                             <StackPanel Margin="10">
                                 <CheckBox Content="Enable High-Pass" IsChecked="{Binding Settings.HighPass.IsEnabled}" />
                                 <TextBlock Text="Removes very low rumble so headroom is preserved for musical bass." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock Text="Cutoff (Hz)" FontWeight="SemiBold" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Cutoff (Hz)" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Settings.HighPass.CutoffHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
+                                </Grid>
                                 <Slider Minimum="20" Maximum="120" Value="{Binding Settings.HighPass.CutoffHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Text="{Binding Settings.HighPass.CutoffHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
                             </StackPanel>
                         </TabItem>
 
@@ -446,33 +572,109 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="10">
                                     <CheckBox Content="Enable EQ" IsChecked="{Binding Settings.Equalizer.IsEnabled}" />
-                                    <TextBlock Text="Low Shelf Frequency (Hz)" FontWeight="SemiBold" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Low Shelf Frequency (Hz)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.LowShelf.FrequencyHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Equalizer.LowShelf.FrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="Low Shelf Gain (dB)" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Low Shelf Gain (dB)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.LowShelf.GainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.LowShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="Low Shelf Q" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Low Shelf Q" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.LowShelf.Q, StringFormat={}{0:F2}}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="0.3" Maximum="2.5" Value="{Binding Settings.Equalizer.LowShelf.Q, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                                    <TextBlock Text="Mid Bell Frequency (Hz)" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                    
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Mid Bell Frequency (Hz)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.MidBell.FrequencyHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="200" Maximum="6000" Value="{Binding Settings.Equalizer.MidBell.FrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="Mid Bell Gain (dB)" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Mid Bell Gain (dB)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.MidBell.GainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.MidBell.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="Mid Bell Q" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Mid Bell Q" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.MidBell.Q, StringFormat={}{0:F2}}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="0.3" Maximum="6" Value="{Binding Settings.Equalizer.MidBell.Q, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-                                    <TextBlock Text="High Shelf Frequency (Hz)" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                    
+                                    <Grid Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="High Shelf Frequency (Hz)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.HighShelf.FrequencyHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="2500" Maximum="16000" Value="{Binding Settings.Equalizer.HighShelf.FrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="High Shelf Gain (dB)" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="High Shelf Gain (dB)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.HighShelf.GainDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.HighShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Text="High Shelf Q" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="High Shelf Q" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Equalizer.HighShelf.Q, StringFormat={}{0:F2}}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="0.3" Maximum="2.5" Value="{Binding Settings.Equalizer.HighShelf.Q, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
                                     <TextBlock Text="Response" Margin="0,8,0,4" FontWeight="SemiBold" />
-                                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="620">
-                                        <Canvas Width="336" Height="100" Background="{StaticResource PanelDeepBrush}">
-                                            <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8" Points="{Binding EqResponsePoints}" />
-                                        </Canvas>
-                                    </Viewbox>
+                                    <Border CornerRadius="7"
+                                            BorderThickness="1"
+                                            BorderBrush="{StaticResource BorderBrushStrong}"
+                                            Background="{StaticResource PanelDeepBrush}"
+                                            Padding="4">
+                                        <Viewbox Stretch="Uniform" StretchDirection="Both" HorizontalAlignment="Center" MaxWidth="860">
+                                            <Canvas Width="336" Height="100" Background="{StaticResource PanelDeepBrush}">
+                                                <Rectangle Width="336" Height="100" Stroke="{StaticResource BorderBrushMuted}" StrokeThickness="1" />
+                                                <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8" Points="{Binding EqResponsePoints}" />
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
                                 </StackPanel>
                             </ScrollViewer>
                         </TabItem>
@@ -481,22 +683,145 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel Margin="10">
                                     <CheckBox Content="Enable Multiband Compression" IsChecked="{Binding Settings.Compression.IsEnabled}" />
-                                    <TextBlock Text="Low Band" FontWeight="Bold" Margin="0,8,0,4" />
+                                    <Grid Margin="0,8,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Height="1" VerticalAlignment="Center" Margin="0,0,8,0" Background="{StaticResource BorderBrushMuted}" />
+                                        <TextBlock Grid.Column="1" Text="Low Band" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource AccentBrush}" />
+                                        <Border Grid.Column="2" Height="1" VerticalAlignment="Center" Margin="8,0,0,0" Background="{StaticResource BorderBrushMuted}" />
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Threshold (dB)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Low.ThresholdDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="-40" Maximum="-6" Value="{Binding Settings.Compression.Low.ThresholdDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Ratio" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Low.Ratio, StringFormat={}{0:F2}:1}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="1" Maximum="4" Value="{Binding Settings.Compression.Low.Ratio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Attack (ms)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Low.AttackMs, StringFormat={}{0:F1} ms}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="1" Maximum="80" Value="{Binding Settings.Compression.Low.AttackMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Release (ms)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Low.ReleaseMs, StringFormat={}{0:F1} ms}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Compression.Low.ReleaseMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                    <TextBlock Text="Mid Band" FontWeight="Bold" Margin="0,10,0,4" />
+                                    <Grid Margin="0,12,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Height="1" VerticalAlignment="Center" Margin="0,0,8,0" Background="{StaticResource BorderBrushMuted}" />
+                                        <TextBlock Grid.Column="1" Text="Mid Band" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource AccentBrush}" />
+                                        <Border Grid.Column="2" Height="1" VerticalAlignment="Center" Margin="8,0,0,0" Background="{StaticResource BorderBrushMuted}" />
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Threshold (dB)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Mid.ThresholdDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="-40" Maximum="-6" Value="{Binding Settings.Compression.Mid.ThresholdDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Ratio" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Mid.Ratio, StringFormat={}{0:F2}:1}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="1" Maximum="4" Value="{Binding Settings.Compression.Mid.Ratio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Attack (ms)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Mid.AttackMs, StringFormat={}{0:F1} ms}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="1" Maximum="80" Value="{Binding Settings.Compression.Mid.AttackMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Release (ms)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.Mid.ReleaseMs, StringFormat={}{0:F1} ms}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Compression.Mid.ReleaseMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
 
-                                    <TextBlock Text="High Band" FontWeight="Bold" Margin="0,10,0,4" />
+                                    <Grid Margin="0,12,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Height="1" VerticalAlignment="Center" Margin="0,0,8,0" Background="{StaticResource BorderBrushMuted}" />
+                                        <TextBlock Grid.Column="1" Text="High Band" FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource AccentBrush}" />
+                                        <Border Grid.Column="2" Height="1" VerticalAlignment="Center" Margin="8,0,0,0" Background="{StaticResource BorderBrushMuted}" />
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Threshold (dB)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.High.ThresholdDb, StringFormat={}{0:F1} dB}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="-40" Maximum="-6" Value="{Binding Settings.Compression.High.ThresholdDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Ratio" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.High.Ratio, StringFormat={}{0:F2}:1}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="1" Maximum="4" Value="{Binding Settings.Compression.High.Ratio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Attack (ms)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.High.AttackMs, StringFormat={}{0:F1} ms}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="1" Maximum="80" Value="{Binding Settings.Compression.High.AttackMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Grid Margin="0,6,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Release (ms)" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Settings.Compression.High.ReleaseMs, StringFormat={}{0:F1} ms}" HorizontalAlignment="Right" />
+                                    </Grid>
                                     <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Compression.High.ReleaseMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                 </StackPanel>
                             </ScrollViewer>
@@ -506,8 +831,15 @@
                             <StackPanel Margin="10">
                                 <CheckBox Content="Enable Saturation" IsChecked="{Binding Settings.Saturation.IsEnabled}" />
                                 <TextBlock Text="Soft clipping only. Increase drive carefully to avoid audible distortion." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Drive" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Settings.Saturation.Drive, StringFormat={}{0:P0}}" HorizontalAlignment="Right" />
+                                </Grid>
                                 <Slider Minimum="0" Maximum="1" Value="{Binding Settings.Saturation.Drive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Text="{Binding Settings.Saturation.Drive, StringFormat={}{0:F2}}" HorizontalAlignment="Right" />
                             </StackPanel>
                         </TabItem>
 
@@ -515,8 +847,15 @@
                             <StackPanel Margin="10">
                                 <CheckBox Content="Enable Stereo Imaging" IsChecked="{Binding Settings.Stereo.IsEnabled}" />
                                 <TextBlock Text="Width control is constrained for mono compatibility safety." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Width" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Settings.Stereo.Width, StringFormat={}{0:P0}}" HorizontalAlignment="Right" />
+                                </Grid>
                                 <Slider Minimum="0.7" Maximum="1.3" Value="{Binding Settings.Stereo.Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Text="{Binding Settings.Stereo.Width, StringFormat={}{0:F2}x}" HorizontalAlignment="Right" />
                             </StackPanel>
                         </TabItem>
 
@@ -524,9 +863,23 @@
                             <StackPanel Margin="10">
                                 <CheckBox Content="Enable Limiter" IsChecked="{Binding Settings.Limiter.IsEnabled}" />
                                 <TextBlock Text="Lookahead limiting controls final peaks without hard clipping." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
-                                <TextBlock Text="Ceiling (dBTP)" FontWeight="SemiBold" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Ceiling (dBTP)" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Settings.Limiter.CeilingDbTp, StringFormat={}{0:F2} dBTP}" HorizontalAlignment="Right" />
+                                </Grid>
                                 <Slider Minimum="-2" Maximum="-0.1" Value="{Binding Settings.Limiter.CeilingDbTp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                <TextBlock Text="Lookahead (ms)" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Lookahead (ms)" FontWeight="SemiBold" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Settings.Limiter.LookaheadMs, StringFormat={}{0:F2} ms}" HorizontalAlignment="Right" />
+                                </Grid>
                                 <Slider Minimum="0.5" Maximum="10" Value="{Binding Settings.Limiter.LookaheadMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
                         </TabItem>

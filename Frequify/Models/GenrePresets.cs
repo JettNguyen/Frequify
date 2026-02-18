@@ -14,6 +14,10 @@ public static class GenrePresets
         return new List<GenrePreset>
         {
             new(
+                "Auto",
+                "Analyzes the loaded track and automatically tunes mastering controls based on loudness, peaks, dynamics, and spectrum.",
+                _ => { }),
+            new(
                 "Pop",
                 "Balanced clarity with controlled low end and modern loudness.",
                 settings =>
