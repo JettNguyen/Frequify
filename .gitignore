@@ -1,0 +1,22 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# User-specific files
+.vs/
+*.user
+*.suo
+
+# Rider/ReSharper
+.idea/
+_ReSharper*/
+*.DotSettings.user
+
+# Logs and temp files
+*.log
+*.tmp
+*.cache
+
+# OS files
+.DS_Store
+Thumbs.db

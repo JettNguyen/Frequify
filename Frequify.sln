@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Frequify", "Frequify\Frequify.csproj", "{F13A5DF0-8FBF-F984-8E8A-A94AA83FCF9D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F13A5DF0-8FBF-F984-8E8A-A94AA83FCF9D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F13A5DF0-8FBF-F984-8E8A-A94AA83FCF9D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F13A5DF0-8FBF-F984-8E8A-A94AA83FCF9D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F13A5DF0-8FBF-F984-8E8A-A94AA83FCF9D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B33B9F07-725A-4133-B5AF-AECD091A4496}
+	EndGlobalSection
+EndGlobal

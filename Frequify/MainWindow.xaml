@@ -1,0 +1,546 @@
+<Window x:Class="Frequify.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Frequify - Audio Mastering"
+        Height="940"
+        Width="1650"
+        MinHeight="800"
+        MinWidth="1300"
+        Background="{StaticResource AppBackgroundBrush}"
+        AllowDrop="True"
+        Drop="Window_Drop"
+        DragOver="Window_DragOver">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+        <Style x:Key="ModeSimpleButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource PanelAltBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAdvancedMode}" Value="False">
+                    <Setter Property="Background" Value="{StaticResource AccentSurfaceBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ModeAdvancedButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource PanelAltBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAdvancedMode}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentSurfaceBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PreviewOriginalViewButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource PanelAltBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPreviewOriginalView}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource AccentSurfaceBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PreviewMasteredViewButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+            <Setter Property="Background" Value="{StaticResource PanelAltBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushStrong}" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsPreviewOriginalView}" Value="False">
+                    <Setter Property="Background" Value="{StaticResource AccentSurfaceBrush}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                    <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="14" Background="{StaticResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" BorderThickness="1" CornerRadius="10" Padding="12" Margin="0,0,0,10" BorderBrush="{StaticResource BorderBrushMuted}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Viewbox Width="34" Height="34" Margin="0,0,8,0">
+                            <Grid Width="100" Height="100">
+                                <Ellipse Fill="#1F1F1F" Stroke="{StaticResource AccentBrush}" StrokeThickness="6" Width="92" Height="92" />
+                                <Path Stroke="#F1F1F1" StrokeThickness="7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 16 50 C 26 32, 38 32, 48 50 C 58 68, 70 68, 80 50" />
+                            </Grid>
+                        </Viewbox>
+                        <TextBlock Text="Frequify" FontSize="28" FontWeight="Bold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="An offline mastering tool built by Jett2Fly." FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding LoadedFilePath}" FontSize="12" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="Tip: drag and drop a WAV or MP3 file anywhere in this window."
+                               FontSize="11"
+                               Margin="0,4,0,0"
+                               Foreground="{StaticResource TextSecondaryBrush}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,8">
+                        <TextBlock Text="Mode:" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                        <Button Content="Simple"
+                                Command="{Binding SetSimpleModeCommand}"
+                            Style="{StaticResource ModeSimpleButtonStyle}"
+                                MinWidth="80"
+                                Margin="0,0,6,0"
+                            />
+                        <Button Content="Advanced"
+                                Command="{Binding SetAdvancedModeCommand}"
+                            Style="{StaticResource ModeAdvancedButtonStyle}"
+                                MinWidth="88"
+                            />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Load Audio" Command="{Binding LoadFileCommand}" MinWidth="108" Margin="0,0,8,0" />
+                        <Button Content="Analyze" Command="{Binding AnalyzeCommand}" MinWidth="95" Margin="0,0,8,0" />
+                        <Button Content="Apply Mastering" Command="{Binding MasterCommand}" MinWidth="130" Margin="0,0,8,0" />
+                        <Button Content="Export WAV" Command="{Binding ExportCommand}" MinWidth="110" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1" BorderThickness="1" CornerRadius="8" Padding="10" Margin="0,0,0,10" BorderBrush="{StaticResource BorderBrushMuted}">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding CurrentModeText}" Margin="12,0,18,0" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding ProgressPercent, StringFormat=Progress: {0:F0}%}" VerticalAlignment="Center" />
+                </Grid>
+                <ProgressBar Height="16" Margin="0,6,0,0" Minimum="0" Maximum="100" Value="{Binding ProgressPercent, Mode=OneWay}" />
+                <TextBlock Margin="0,6,0,0"
+                           Text="{Binding ErrorMessage}"
+                           Foreground="{StaticResource DangerBrush}"
+                           Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="2" Background="{StaticResource AppBackgroundBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="390" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Background="{StaticResource PanelDeepBrush}">
+                <StackPanel>
+                    <GroupBox Header="A/B Comparison" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Switch preview source and control transport. Visuals compare original vs mastered." TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                                <Button Content="Original View" Command="{Binding SetPreviewOriginalViewCommand}" Style="{StaticResource PreviewOriginalViewButtonStyle}" MinWidth="110" Margin="0,0,8,0" />
+                                <Button Content="Mastered View" Command="{Binding SetPreviewMasteredViewCommand}" Style="{StaticResource PreviewMasteredViewButtonStyle}" MinWidth="114" />
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Content="{Binding PreviewToggleText}" Command="{Binding PreviewCommand}" MinWidth="74" Margin="0,0,6,0" />
+                                <Button Content="Restart" Command="{Binding RestartPreviewCommand}" MinWidth="72" />
+                            </StackPanel>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding PreviewPositionText}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <Slider Grid.Column="1"
+                                        Minimum="0"
+                                        Maximum="{Binding PreviewDurationSeconds}"
+                                        Value="{Binding PreviewPositionSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Grid.Column="2" Text="{Binding PreviewDurationText}" VerticalAlignment="Center" Margin="8,0,0,0" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Volume" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <Slider Grid.Column="1" Minimum="0" Maximum="1" Value="{Binding PreviewVolume, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </Grid>
+
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="8" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Original" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                    <TextBlock Text="Sound" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,3" />
+                                    <Border CornerRadius="7" BorderThickness="1" BorderBrush="{StaticResource BorderBrushMuted}" Background="{StaticResource PanelDeepBrush}" Padding="3" Margin="0,0,0,6">
+                                        <Viewbox Stretch="Fill" Height="48">
+                                            <Canvas Width="336" Height="82" ClipToBounds="True">
+                                                <Polyline Stroke="{StaticResource AccentMutedBrush}" StrokeThickness="1.7" Points="{Binding OriginalVisualizerPoints}" />
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                    <TextBlock Text="Waveform" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,3" />
+                                    <Border CornerRadius="7" BorderThickness="1" BorderBrush="{StaticResource BorderBrushMuted}" Background="{StaticResource PanelDeepBrush}" Padding="3">
+                                        <Viewbox Stretch="Fill" Height="48">
+                                            <Canvas Width="336" Height="82" ClipToBounds="True">
+                                                <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4" Points="{Binding OriginalWaveformPoints}" />
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Mastered" FontWeight="SemiBold" Margin="0,0,0,4" />
+                                    <TextBlock Text="Sound" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,3" />
+                                    <Border CornerRadius="7" BorderThickness="1" BorderBrush="{StaticResource BorderBrushMuted}" Background="{StaticResource PanelDeepBrush}" Padding="3" Margin="0,0,0,6">
+                                        <Viewbox Stretch="Fill" Height="48">
+                                            <Canvas Width="336" Height="82" ClipToBounds="True">
+                                                <Polyline Stroke="{StaticResource AccentMutedBrush}" StrokeThickness="1.7" Points="{Binding MasteredVisualizerPoints}" />
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                    <TextBlock Text="Waveform" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,3" />
+                                    <Border CornerRadius="7" BorderThickness="1" BorderBrush="{StaticResource BorderBrushMuted}" Background="{StaticResource PanelDeepBrush}" Padding="3">
+                                        <Viewbox Stretch="Fill" Height="48">
+                                            <Canvas Width="336" Height="82" ClipToBounds="True">
+                                                <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.4" Points="{Binding MasteredWaveformPoints}" />
+                                            </Canvas>
+                                        </Viewbox>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="Original" FontWeight="SemiBold" Margin="0,0,14,0" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="Mastered" FontWeight="SemiBold" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Integrated LUFS" Margin="0,4,8,0" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SourceIntegratedLufsText}" Margin="0,4,14,0" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding MasteredIntegratedLufsText}" Margin="0,4,0,0" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="True Peak" Margin="0,4,8,0" />
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SourceTruePeakText}" Margin="0,4,14,0" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding MasteredTruePeakText}" Margin="0,4,0,0" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="RMS" Margin="0,4,8,0" />
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SourceRmsText}" Margin="0,4,14,0" />
+                                <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding MasteredRmsText}" Margin="0,4,0,0" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Crest" Margin="0,4,8,0" />
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SourceCrestFactorText}" Margin="0,4,14,0" />
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding MasteredCrestFactorText}" Margin="0,4,0,0" />
+                            </Grid>
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Analysis Snapshot" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Integrated LUFS" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding IntegratedLufsText}" FontWeight="SemiBold" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="True Peak" Margin="0,6,0,0" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TruePeakText}" Margin="0,6,0,0" FontWeight="SemiBold" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="RMS Level" Margin="0,6,0,0" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RmsText}" Margin="0,6,0,0" FontWeight="SemiBold" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Crest Factor" Margin="0,6,0,0" />
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CrestFactorText}" Margin="0,6,0,0" FontWeight="SemiBold" />
+                        </Grid>
+                    </GroupBox>
+
+                    <GroupBox Header="Spectrum" Margin="0,0,0,10">
+                        <Border CornerRadius="7" BorderThickness="1" BorderBrush="{StaticResource BorderBrushMuted}" Background="{StaticResource PanelDeepBrush}" Padding="4">
+                            <Canvas Width="336" Height="96" ClipToBounds="True">
+                                <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8" Points="{Binding SpectrumPoints}" />
+                            </Canvas>
+                        </Border>
+                    </GroupBox>
+
+                    <GroupBox Header="Genre Presets" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Selecting a preset instantly updates sliders and controls. You keep full manual control." TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" />
+                            <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" Margin="0,8,0,0" />
+                            <Button Content="Reapply Preset" Command="{Binding ApplyPresetCommand}" Margin="0,8,0,0" />
+                            <TextBlock Text="{Binding SelectedPresetDescription}" TextWrapping="Wrap" Margin="0,8,0,0" FontSize="12" />
+                        </StackPanel>
+                    </GroupBox>
+
+                    <GroupBox Header="Compression Meters">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Low Band" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding LowGrText}" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Mid Band" Margin="0,6,0,0" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding MidGrText}" Margin="0,6,0,0" />
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="High Band" Margin="0,6,0,0" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding HighGrText}" Margin="0,6,0,0" />
+                        </Grid>
+                    </GroupBox>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Grid Grid.Column="2">
+                <Border BorderBrush="{StaticResource BorderBrushMuted}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{StaticResource PanelBrush}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAdvancedMode}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{StaticResource PanelDeepBrush}">
+                        <StackPanel>
+                            <TextBlock Text="Simple Mode" FontSize="20" FontWeight="Bold" Margin="0,0,0,4" />
+                            <TextBlock Text="Focused controls for fast results. Switch to Advanced for full stage parameters." Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" TextWrapping="Wrap" />
+
+                            <GroupBox Header="Tone">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Text="High-Pass Cutoff" />
+                                    <Slider Grid.Row="1" Minimum="20" Maximum="120" Value="{Binding Settings.HighPass.CutoffHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Grid.Row="1" Text="{Binding Settings.HighPass.CutoffHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
+
+                                    <TextBlock Grid.Row="2" Text="Low / Mid / High EQ Gain" Margin="0,8,0,0" />
+                                    <StackPanel Grid.Row="3" Orientation="Horizontal">
+                                        <Slider Width="220" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.LowShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                        <Slider Width="220" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.MidBell.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                        <Slider Width="220" Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.HighShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </StackPanel>
+                                </Grid>
+                            </GroupBox>
+
+                            <GroupBox Header="Dynamics &amp; Color" Margin="0,10,0,0">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Saturation Drive" />
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Stereo Width" Margin="8,0,0,0" />
+                                    <Slider Grid.Row="1" Grid.Column="0" Minimum="0" Maximum="1" Value="{Binding Settings.Saturation.Drive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Grid.Row="1" Grid.Column="1" Minimum="0.7" Maximum="1.3" Value="{Binding Settings.Stereo.Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Limiter Ceiling" Margin="0,8,0,0" />
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Target LUFS" Margin="8,8,0,0" />
+                                    <Slider Grid.Row="3" Grid.Column="0" Minimum="-2" Maximum="-0.1" Value="{Binding Settings.Limiter.CeilingDbTp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding TargetLufsOptions}" SelectedItem="{Binding Settings.Loudness.TargetLufs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="8,0,0,0" />
+                                </Grid>
+                            </GroupBox>
+
+                            <GroupBox Header="EQ Response" Margin="0,10,0,0">
+                                <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="560">
+                                    <Canvas Width="336" Height="100" Background="{StaticResource PanelDeepBrush}">
+                                        <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8" Points="{Binding EqResponsePoints}" />
+                                    </Canvas>
+                                </Viewbox>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <Border BorderBrush="{StaticResource BorderBrushMuted}" BorderThickness="1" CornerRadius="8" Padding="10" Background="{StaticResource PanelBrush}">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAdvancedMode}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <TabControl Margin="0,2,0,0">
+                        <TabItem Header="High-Pass">
+                            <StackPanel Margin="10">
+                                <CheckBox Content="Enable High-Pass" IsChecked="{Binding Settings.HighPass.IsEnabled}" />
+                                <TextBlock Text="Removes very low rumble so headroom is preserved for musical bass." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="Cutoff (Hz)" FontWeight="SemiBold" />
+                                <Slider Minimum="20" Maximum="120" Value="{Binding Settings.HighPass.CutoffHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="{Binding Settings.HighPass.CutoffHz, StringFormat={}{0:F0} Hz}" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </TabItem>
+
+                        <TabItem Header="Equalizer">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <CheckBox Content="Enable EQ" IsChecked="{Binding Settings.Equalizer.IsEnabled}" />
+                                    <TextBlock Text="Low Shelf Frequency (Hz)" FontWeight="SemiBold" />
+                                    <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Equalizer.LowShelf.FrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Low Shelf Gain (dB)" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    <Slider Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.LowShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Low Shelf Q" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    <Slider Minimum="0.3" Maximum="2.5" Value="{Binding Settings.Equalizer.LowShelf.Q, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                    <TextBlock Text="Mid Bell Frequency (Hz)" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                    <Slider Minimum="200" Maximum="6000" Value="{Binding Settings.Equalizer.MidBell.FrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Mid Bell Gain (dB)" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    <Slider Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.MidBell.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="Mid Bell Q" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    <Slider Minimum="0.3" Maximum="6" Value="{Binding Settings.Equalizer.MidBell.Q, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                    <TextBlock Text="High Shelf Frequency (Hz)" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                    <Slider Minimum="2500" Maximum="16000" Value="{Binding Settings.Equalizer.HighShelf.FrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="High Shelf Gain (dB)" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    <Slider Minimum="-8" Maximum="8" Value="{Binding Settings.Equalizer.HighShelf.GainDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Text="High Shelf Q" FontWeight="SemiBold" Margin="0,6,0,0" />
+                                    <Slider Minimum="0.3" Maximum="2.5" Value="{Binding Settings.Equalizer.HighShelf.Q, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                    <TextBlock Text="Response" Margin="0,8,0,4" FontWeight="SemiBold" />
+                                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Left" MaxWidth="620">
+                                        <Canvas Width="336" Height="100" Background="{StaticResource PanelDeepBrush}">
+                                            <Polyline Stroke="{StaticResource AccentBrush}" StrokeThickness="1.8" Points="{Binding EqResponsePoints}" />
+                                        </Canvas>
+                                    </Viewbox>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <TabItem Header="Compression">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <CheckBox Content="Enable Multiband Compression" IsChecked="{Binding Settings.Compression.IsEnabled}" />
+                                    <TextBlock Text="Low Band" FontWeight="Bold" Margin="0,8,0,4" />
+                                    <Slider Minimum="-40" Maximum="-6" Value="{Binding Settings.Compression.Low.ThresholdDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="1" Maximum="4" Value="{Binding Settings.Compression.Low.Ratio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="1" Maximum="80" Value="{Binding Settings.Compression.Low.AttackMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Compression.Low.ReleaseMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                    <TextBlock Text="Mid Band" FontWeight="Bold" Margin="0,10,0,4" />
+                                    <Slider Minimum="-40" Maximum="-6" Value="{Binding Settings.Compression.Mid.ThresholdDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="1" Maximum="4" Value="{Binding Settings.Compression.Mid.Ratio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="1" Maximum="80" Value="{Binding Settings.Compression.Mid.AttackMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Compression.Mid.ReleaseMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                    <TextBlock Text="High Band" FontWeight="Bold" Margin="0,10,0,4" />
+                                    <Slider Minimum="-40" Maximum="-6" Value="{Binding Settings.Compression.High.ThresholdDb, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="1" Maximum="4" Value="{Binding Settings.Compression.High.Ratio, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="1" Maximum="80" Value="{Binding Settings.Compression.High.AttackMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Slider Minimum="40" Maximum="400" Value="{Binding Settings.Compression.High.ReleaseMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <TabItem Header="Saturation">
+                            <StackPanel Margin="10">
+                                <CheckBox Content="Enable Saturation" IsChecked="{Binding Settings.Saturation.IsEnabled}" />
+                                <TextBlock Text="Soft clipping only. Increase drive carefully to avoid audible distortion." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <Slider Minimum="0" Maximum="1" Value="{Binding Settings.Saturation.Drive, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="{Binding Settings.Saturation.Drive, StringFormat={}{0:F2}}" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </TabItem>
+
+                        <TabItem Header="Stereo">
+                            <StackPanel Margin="10">
+                                <CheckBox Content="Enable Stereo Imaging" IsChecked="{Binding Settings.Stereo.IsEnabled}" />
+                                <TextBlock Text="Width control is constrained for mono compatibility safety." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <Slider Minimum="0.7" Maximum="1.3" Value="{Binding Settings.Stereo.Width, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="{Binding Settings.Stereo.Width, StringFormat={}{0:F2}x}" HorizontalAlignment="Right" />
+                            </StackPanel>
+                        </TabItem>
+
+                        <TabItem Header="Limiter">
+                            <StackPanel Margin="10">
+                                <CheckBox Content="Enable Limiter" IsChecked="{Binding Settings.Limiter.IsEnabled}" />
+                                <TextBlock Text="Lookahead limiting controls final peaks without hard clipping." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <TextBlock Text="Ceiling (dBTP)" FontWeight="SemiBold" />
+                                <Slider Minimum="-2" Maximum="-0.1" Value="{Binding Settings.Limiter.CeilingDbTp, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <TextBlock Text="Lookahead (ms)" FontWeight="SemiBold" Margin="0,8,0,0" />
+                                <Slider Minimum="0.5" Maximum="10" Value="{Binding Settings.Limiter.LookaheadMs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+                        </TabItem>
+
+                        <TabItem Header="Loudness">
+                            <StackPanel Margin="10">
+                                <CheckBox Content="Enable Loudness Normalization" IsChecked="{Binding Settings.Loudness.IsEnabled}" />
+                                <TextBlock Text="Target integrated loudness for platform delivery." Margin="0,6,0,8" Foreground="{StaticResource TextSecondaryBrush}" />
+                                <ComboBox ItemsSource="{Binding TargetLufsOptions}" SelectedItem="{Binding Settings.Loudness.TargetLufs, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="180" />
+                            </StackPanel>
+                        </TabItem>
+                    </TabControl>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

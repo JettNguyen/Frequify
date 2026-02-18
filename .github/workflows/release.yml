@@ -1,0 +1,49 @@
+name: Build and Release Frequify
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore Frequify/Frequify.csproj
+
+      - name: Publish self-contained win-x64
+        run: dotnet publish Frequify/Frequify.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true
+
+      - name: Create ZIP artifact
+        shell: pwsh
+        run: |
+          $publishPath = "Frequify/bin/Release/net8.0-windows/win-x64/publish/*"
+          $zipPath = "Frequify/bin/Release/net8.0-windows/win-x64/Frequify-win-x64-portable.zip"
+          Compress-Archive -Path $publishPath -DestinationPath $zipPath -Force
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Frequify-win-x64-portable
+          path: Frequify/bin/Release/net8.0-windows/win-x64/Frequify-win-x64-portable.zip
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Frequify/bin/Release/net8.0-windows/win-x64/Frequify-win-x64-portable.zip
+          generate_release_notes: true
