@@ -1,4 +1,5 @@
 # Frequify
+![Frequify Logo](https://github.com/JettNguyen/Frequify/blob/main/Frequify/Assets/AppIcon.png?raw=true)
 
 _by [Jett2Fly](https://jett2fly.com)_
 
